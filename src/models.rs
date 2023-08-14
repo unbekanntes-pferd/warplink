@@ -21,6 +21,7 @@ pub enum WarpLinkError {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CreateWarpLinkRequest {
     pub long_link: String,
 }
@@ -65,6 +66,7 @@ impl WarpLinkErrorResponse {
 pub struct WarpLinkConfig {
     port: u32,
     database_url: String,
+    is_prod: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -89,6 +91,10 @@ impl WarpLinkConfig {
             .and_then(|val| val.parse().ok())
             .unwrap_or(3000);
 
+        let is_prod = std::env::var("ENVIRONMENT")
+            .unwrap_or_else(|_| "dev".to_string())
+            .eq("prod");
+
         let database_url = std::env::var("DATABASE_URL")
             .unwrap_or_else(|_| {
             let database_user = std::env::var("DB_USER").unwrap_or("postgres".to_string());
@@ -101,7 +107,13 @@ impl WarpLinkConfig {
             )
             });
 
-        Self { port, database_url }
+        let database_url = if is_prod {
+            format!("{}?sslmode=require", database_url)
+        } else {
+            database_url
+        };
+
+        Self { port, database_url, is_prod }
     }
 
     pub fn port(&self) -> u32 {
