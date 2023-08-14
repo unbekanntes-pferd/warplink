@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS warp_link (
+    id BIGSERIAL PRIMARY KEY,
+    short_link VARCHAR(255) NOT NULL,
+    long_link TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);

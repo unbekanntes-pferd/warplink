@@ -1,0 +1,30 @@
+services:
+  warplink-db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: warplink
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  warplink-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - warplink-db
+    environment:
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      PORT: 3000
+      DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@warplink-db:5432/warplink
+    ports:
+      - "3000:3000"
+
+volumes:
+  postgres-data:
+    driver: local
+

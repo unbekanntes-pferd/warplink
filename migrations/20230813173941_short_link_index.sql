@@ -1,0 +1,1 @@
+CREATE INDEX idx_warp_link_short_link ON warp_link (short_link);
