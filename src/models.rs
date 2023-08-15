@@ -60,6 +60,11 @@ impl WarpLinkErrorResponse {
         let message = "Not found.";
         Self::new_error(404, message, details)
     }
+
+    pub fn new_bad_request(details: Option<String>) -> impl IntoResponse {
+        let message = "Bad request.";
+        Self::new_error(400, message, details)
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]

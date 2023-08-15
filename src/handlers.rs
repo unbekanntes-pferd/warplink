@@ -74,8 +74,17 @@ pub mod links {
         // handle invalid url
         if let Err(err) = Url::parse(payload.long_link.as_str()) {
             error!("Invalid url: {}", err);
-            let details = format!("Invalid url: {}", err);
-            return WarpLinkErrorResponse::new_internal_error(Some(details)).into_response();
+            let details = format!("Invalid url: {} ({})", payload.long_link, err);
+            return WarpLinkErrorResponse::new_bad_request(Some(details)).into_response();
+        }
+
+        let parsed_url = Url::parse(payload.long_link.as_str()).unwrap();
+
+        // handle invalid scheme
+        if !parsed_url.scheme().starts_with("http") {
+            error!("Invalid scheme: {} (http(s) required)", parsed_url.scheme());
+            let details = format!("Invalid scheme: {}", parsed_url.scheme());
+            return WarpLinkErrorResponse::new_bad_request(Some(details)).into_response();
         }
 
         let warp_link = insert_short_link(state, payload).await;
