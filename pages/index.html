@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="/static/style.css">
+  <script src="https://unpkg.com/htmx.org@1.6.1"></script>
+</head>
+<body class="center-container">
+  <div>
+    <div class="logo-container">
+      <img src="/static/logo.png" alt="Logo" class="logo">
+  </div>
+  <!-- <div class="nav-links">
+      <a href="#home" class="nav-link">Home</a>
+      <a href="#features" class="nav-link">Features</a>
+      <a href="#contact" class="nav-link">Contact</a>
+  </div> -->
+  </div>
+  <div>
+  <form hx-post="/register" hx-headers='{"Content-Type": "application/json"}' hx-swap="afterend" hx-target="#result-container">
+    <input type="text" name="longLink" id="longLink" placeholder="Enter URL">
+    <button type="submit">Warp</button>
+  </form>
+  <div id="result-container"></div>
+</div>
+</body>
+</html>

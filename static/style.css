@@ -1,0 +1,83 @@
+.result-box {
+    background-color: #020206;
+    color: #c462ff;
+    border: 2px solid #c462ff;
+    border-radius: 4px;
+    display: inline-block;
+    padding: 20px;
+    margin: 10px;
+  }
+
+  body {
+    background-color: #020206;
+    color: #c462ff;
+  }
+
+  #logo {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+  }
+
+  input, button {
+    background-color: #020206;
+    color: #c462ff;
+    border: 2px solid #c462ff;
+  }
+  
+  button:hover {
+    background-color: #c462ff;
+    color: #410874;
+  }
+
+  a {
+    color: #c462ff;
+    text-decoration: none;
+  }
+
+  a:hover {
+    color: #ccace8;
+  }
+
+  a:visited {
+    color: #765889;
+  }
+
+  .center-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh; /* takes full viewport height */
+}
+
+.nav-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #020206;
+  color: #c462ff;
+  padding: 15px;
+}
+
+.logo-container {
+  flex-grow: 1;
+}
+
+.logo {
+  height: 200px;
+}
+
+.nav-links {
+  display: flex;
+  gap: 20px;
+}
+
+.nav-link {
+  color: #c462ff;
+  text-decoration: none;
+}
+
+input[type="text"], button {
+  border-radius: 4px;
+}

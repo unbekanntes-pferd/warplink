@@ -1,9 +1,8 @@
 pub mod links {
     use axum::{
-        extract::{Path, State},
-        http::StatusCode,
-        response::{IntoResponse, Redirect},
-        Json,
+        extract::{Path, State, Host},
+        response::{Html, IntoResponse, Redirect},
+        Form,
     };
     use tracing::{debug, error, info};
     use url::Url;
@@ -69,13 +68,14 @@ pub mod links {
 
     pub async fn register_short_link(
         State(state): State<WarpLinkState>,
-        Json(payload): Json<CreateWarpLinkRequest>,
-    ) -> axum::response::Response {
+        Host(host): Host,
+        Form(payload): Form<CreateWarpLinkRequest>,
+    ) -> Result<Html<String>, WarpLinkErrorResponse> {
         // handle invalid url
         if let Err(err) = Url::parse(payload.long_link.as_str()) {
             error!("Invalid url: {}", err);
             let details = format!("Invalid url: {} ({})", payload.long_link, err);
-            return WarpLinkErrorResponse::new_bad_request(Some(details)).into_response();
+            return Err(WarpLinkErrorResponse::new_bad_request(Some(details)));
         }
 
         let parsed_url = Url::parse(payload.long_link.as_str()).unwrap();
@@ -84,26 +84,48 @@ pub mod links {
         if !parsed_url.scheme().starts_with("http") {
             error!("Invalid scheme: {} (http(s) required)", parsed_url.scheme());
             let details = format!("Invalid scheme: {}", parsed_url.scheme());
-            return WarpLinkErrorResponse::new_bad_request(Some(details)).into_response();
+            return Err(WarpLinkErrorResponse::new_bad_request(Some(details)));
         }
 
         let warp_link = insert_short_link(state, payload).await;
 
         if let Ok(link) = warp_link {
             info!("Created new link with id {}", link.short_link);
-            (StatusCode::CREATED, Json(link)).into_response()
+
+            let protocol = if host.starts_with("localhost") {
+                "http"
+            } else {
+                "https"
+            };
+
+            let full_link = format!("{}://{}/{}", protocol, host, link.short_link);
+
+            let html_res = format!(
+                r##"
+                <div class="result-box">
+                <a href="{}" target="_blank">
+                <span id="shortLink">
+                {}
+                </span>
+                </a>
+                </div>
+                "##,
+                full_link,
+                full_link
+            );
+            Ok(Html(html_res))
         } else {
             let err = warp_link.unwrap_err();
             error!("Database error: {}", err);
             let details = format!("Database error: {}", err);
-            return WarpLinkErrorResponse::new_internal_error(Some(details)).into_response();
+            Err(WarpLinkErrorResponse::new_internal_error(Some(details)))
         }
     }
 
     pub async fn redirect_to_long_link(
         State(state): State<WarpLinkState>,
         Path(short_link): Path<String>,
-    ) -> axum::response::Response {
+    ) -> Result<impl IntoResponse, WarpLinkErrorResponse> {
         let warp_link = get_short_link(state, &short_link).await;
 
         let warp_link = if let Ok(link) = warp_link {
@@ -112,17 +134,16 @@ pub mod links {
             let err = warp_link.unwrap_err();
             error!("Database error: {}", err);
             let details = format!("Database error: {}", err);
-            return WarpLinkErrorResponse::new_internal_error(Some(details)).into_response();
+            return Err(WarpLinkErrorResponse::new_internal_error(Some(details)))
         };
 
-        if warp_link.is_some() {
-            let link = warp_link.unwrap();
+        if let Some(link) = warp_link {
             debug!("Redirecting to {}", link.long_link);
-            Redirect::to(link.long_link.as_str()).into_response()
+            Ok(Redirect::to(link.long_link.as_str()))
         } else {
             error!("Link with id {} not found.", short_link);
             let details = format!("Link with id {} not found.", short_link);
-            WarpLinkErrorResponse::new_not_found(Some(details)).into_response()
+            Err(WarpLinkErrorResponse::new_not_found(Some(details)))
         }
     }
 }
@@ -183,5 +204,15 @@ pub mod health {
         let health = Status::ok();
         info!("Health check OK.");
         (StatusCode::OK, Json(health))
+    }
+}
+
+pub mod pages {
+    use axum::response::Html;
+
+    pub async fn index() -> Html<String> {
+        let content = include_str!("../pages/index.html");
+
+        Html(content.to_string())
     }
 }
